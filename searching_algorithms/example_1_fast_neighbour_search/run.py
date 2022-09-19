@@ -43,6 +43,16 @@ def run():
 
     # pad the bin
 
+    #print(np.shape(bins))
+
+    #print(bins)
+
+    #bins = np.pad(bins,1,mode='wrap')
+
+    #print(np.shape(bins))
+
+    #print(bins)
+
     
     
     # test the binning procedure

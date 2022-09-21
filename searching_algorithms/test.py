@@ -36,6 +36,7 @@ def count_occupied_bins(bins,bins_shape):
     Test number of occupied bins and if the sum over the bins yields the correct atom count.
     '''
 
+    total_bins = 0
     bin_count = 0
     atom_count = 0
     atom_count_per_bin = []
@@ -43,6 +44,7 @@ def count_occupied_bins(bins,bins_shape):
     for i,j,k in np.ndindex(bins_shape):
 
         bin_contents = bins[i][j][k]
+        total_bins += 1
         
         if bin_contents:
 
@@ -51,8 +53,9 @@ def count_occupied_bins(bins,bins_shape):
             atom_count += atoms_in_bin
             atom_count_per_bin.append(atoms_in_bin)
 
-    print('atom count per bin is ' + str(atom_count_per_bin))
-    print('bin count is ' + str(bin_count))
+    print('atom count per ocuupied bin is ' + str(atom_count_per_bin))
+    print('total number of bins is ' + str(total_bins))
+    print('number of occipied bins is ' + str(bin_count))
     print('atom count is ' + str(atom_count))
 
 
@@ -71,8 +74,6 @@ def test_bin_assignment_along_first_axis(bins,bin_positions,cell):
     for stuff in bins:
 
         single_sliced = stuff[:][:]
-
-        print(single_sliced)
 
         positions = []
         symbols = []
@@ -168,110 +169,70 @@ def show_atoms_in_each_bin(bins,cell,showall = True):
     traj.close()
 
 
-def test_periodic_boundary_conditions(bins,cell):
+
+
+def show_neighbours_of_each_bin(bins,bins_shape,cell):
 
     '''
-    Show all the atoms with one layer of bins around the whole cell.
+    Shows a movie of the unique neighbour pairs for every occupied bin.
     '''
 
-    '''
-    Repeat the bins for one layer around the cell. 
-    '''
-    a,b,c = geometry.get_cell_vectors(cell)
-    min_index = 0
-    max_index = np.shape(bins)[0] - 1 
+    traj = Trajectory('test.traj','w') 
 
-    # faces 
+    all_positions = []
+    all_symbols = []
 
-    slice_x_upper = bins[min_index][:][:]
-    slice_x_lower = bins[max_index][:][:]
-    slice_y_upper = bins[:][min_index][:]
-    slice_y_lower = bins[:][max_index][:]
-    slice_z_upper = bins[:][:][min_index]
-    slice_z_lower = bins[:][:][max_index]
+    original_shape = (bins_shape[0] -2,bins_shape[1] - 2,bins_shape[2] -2)
 
-    new_slice = np.copy(slice)
-    
-    #print(np.shares_memory(slice,bins))
+    for i,j,k in np.ndindex(original_shape):
 
+        i = i + 1
+        j = j + 1
+        k = k + 1
 
-    for i,j in np.ndindex(np.shape(new_slice)):
+        all_neighbours_positions = []
+        all_neighbours_symbols = []
 
-        atoms_info = slice[i][j]
+        bin = bins[i][j][k]
+        bin_neighbours = []
+        bin_neighbours.append(bin)
 
-        #print(np.shares_memory(slice,bins))
-    
-        if atoms_info:
+        # slicing routine along z axis
+        bin_neighbours.extend(bins[i+1][j-1][k-1:k+2])
+        bin_neighbours.extend(bins[i+1][j][k-1:k+2])
+        bin_neighbours.extend(bins[i+1][j+1][k-1:k+2])
+        bin_neighbours.extend(bins[i][j+1][k-1:k+2])
+        bin_neighbours.extend([bins[i+1][j][k]])
 
-            for atom_info in atoms_info:
+        # works fine for all bins two layers inside but need to do edge cases for 3 faces one layer in
+       
+        for atoms_info in bin_neighbours:
 
-                atom_info['x'] += c[0]
-                atom_info['y'] += c[1]
-                atom_info['z'] += c[2]
-            
+            positions = []
+            symbols = []
 
-    for i,j in np.ndindex(np.shape(new_slice)):
+            if atoms_info:
 
-        atoms_info = slice[i][j]
-    
-        if atoms_info:
+                pos_list,sym_list = get_bin_info(atoms_info)
+                positions.extend(pos_list)
+                symbols.extend(sym_list)
+                all_neighbours_positions.extend(pos_list)
+                all_neighbours_symbols.extend(sym_list)
+                all_positions.extend(pos_list)
+                all_symbols.extend(sym_list)
 
-            for atom_info in atoms_info:
+                atoms = Atoms(symbols, positions= positions, cell=cell)
+                traj.write(atoms=atoms,mode='a')
 
-                print(atom_info)
+        atoms = Atoms(all_neighbours_symbols, positions= all_neighbours_positions, cell=cell)
+        traj.write(atoms=atoms,mode='a')
 
-        
+    atoms = Atoms(all_symbols, positions= all_positions, cell=cell)
+    traj.write(atoms=atoms,mode='a')
 
-    
-
-
-
-def show_neighbours_of_each_bin(bins,cell):
-
-    '''
-    Shows a movie of all 26 neighbours for every occupied bin.
-    '''
-
-    original_shape = np.shape(bins)
-    bins = np.pad(bins, ((1,1), (1,1), (1, 1)), mode='wrap')
-    print(np.shape(bins))
-
-    bounding_indices = np.ndindex(np.shape(bins))
-    
-   # traj = Trajectory('test.traj','w') 
-
-    for i,j,k in np.ndindex(np.shape(bins)):
-
-        positions = []
-        symbols = []
-
-        #neighbouring_bins = bins[i-1:i+1][j-1:j+1][k-1:k+1]
-        #print(i,j,k)
+    traj.close()
 
 
-        if 0 < j < 5 and k < 5: 
-        
-           neighbouring_bins = bins[i][j-1:j+1][k+1]
-           print(np.shape(neighbouring_bins))
-
-        #print(bins[i-1:i+1][j-1:j+1][k-1:k+1])
-
-        #for atom_info in bins[i][j][k]:
-
-                #pos = [atom_info[0],atom_info[1],atom_info[2]]
-                #positions.append(pos)
-                #symbols.append(atom_info[4])
-
-            
-                #print(' sub bins')
-                #print(nearest_neighbours)
-
-
-
-   # atoms = Atoms(symbols, positions= positions, cell=cell)
-   # traj.write(atoms=atoms,mode='a')
-
-   # traj.close()
 
         
 

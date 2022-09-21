@@ -37,8 +37,8 @@ def run():
     # binning procedure
  
     indices = np.arange(len(positions))
-    bins_shape = (bins_per_dimension,bins_per_dimension,bins_per_dimension)
-    bins = sorting.sort_into_bins(positions,symbols,indices,cell,bins_shape)
+    bins_shape_before_sorting = (bins_per_dimension,bins_per_dimension,bins_per_dimension)
+    bins, bins_shape = sorting.sort_into_bins(positions,symbols,indices,cell,bins_shape_before_sorting, True)
 
 
     # pad the bin
@@ -51,21 +51,20 @@ def run():
 
     #print(np.shape(bins))
 
-    #print(bins)
+    #print(bins_shape)
 
-    
+
     
     # test the binning procedure
 
     #test.count_occupied_bins(bins,bins_shape)
 
-    #test.test_bin_assignment_along_first_axis(bins, bin_positions,cell)
+    #bins, bins_shape = sorting.sort_into_bins(positions,symbols,indices,cell,bins_shape_before_sorting, False)
+    #test.test_bin_assignment_along_first_axis(bins, bin_positions,cell) # only run without neighbring bins being added
 
-    #test.show_atoms_in_each_bin(bins,cell,True)
+    #test.show_atoms_in_each_bin(bins,cell,False)
 
-    #test.test_periodic_boundary_conditions(bins,cell)
-
-    #test.show_neighbours_of_each_bin(bins,cell)
+    test.show_neighbours_of_each_bin(bins,bins_shape,cell)
 
 
 

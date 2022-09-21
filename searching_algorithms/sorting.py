@@ -4,7 +4,7 @@ import numpy as np
 from searching_algorithms import geometry
 
 
-def sort_into_bins(positions,symbols,indices,cell,bins_shape):
+def sort_into_bins(positions,symbols,indices,cell,bins_shape, repeat):
 
     '''
     Splits atoms into 3D bins by binning along each of the specified basis vectors.
@@ -35,13 +35,13 @@ def sort_into_bins(positions,symbols,indices,cell,bins_shape):
 
         bins.append(triple_sliced_positions)
 
-    new_bins = copy.deepcopy(bins)
+    if repeat:
 
-    add_neighbouring_bins(new_bins,4,a,b,c)
+        bins, bins_shape = add_neighbouring_bins(bins,bins_shape[0],a,b,c)
 
     bins = vectorise_bin_data(bins,bins_shape)
-    
-    return bins
+
+    return bins, bins_shape
 
   
 def create_atom_info_array(positions,symbols,indices):
@@ -133,8 +133,6 @@ def add_neighbouring_bins(bins,bins_per_dimension,a,b,c):
 
     bins = pad_array(bins,original_array_size)
     
-    #bins = np.asarray(bins, dtype = 'object')  # could use if have to but likely a bit slower for elementwise accessing
-
     for i,j in np.ndindex((original_array_size,original_array_size)):
 
         inner_layer_lower = 1
@@ -185,8 +183,9 @@ def add_neighbouring_bins(bins,bins_per_dimension,a,b,c):
         bins[outer_layer_higher][outer_layer_lower][outer_layer_lower] = apply_shift(copy.deepcopy(bins[inner_layer_lower][inner_layer_higher][inner_layer_higher]),a - b - c)
         bins[outer_layer_lower][outer_layer_lower][outer_layer_lower] = apply_shift(copy.deepcopy(bins[inner_layer_higher][inner_layer_higher][inner_layer_higher]),-a - b - c)
      
+    bins_shape = (original_array_size +2,original_array_size +2,original_array_size +2)
 
-    print(bins)
+    return bins, bins_shape
    
 
  

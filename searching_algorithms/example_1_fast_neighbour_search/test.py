@@ -19,14 +19,9 @@ def show_atoms_in_each_bin(bins,cell,showall):
     test.show_atoms_in_each_bin(bins,cell,showall)
 
 
-def test_periodic_boundary_conditions(bins,cell):
+def show_neighbours_of_each_bin(bins,bins_shape,cell):
 
-    test.test_periodic_boundary_conditions(bins,cell)
-
-
-def show_neighbours_of_each_bin(bins,cell):
-
-    test.show_neighbours_of_each_bin(bins,cell)
+    test.show_neighbours_of_each_bin(bins,bins_shape,cell)
 
 
 

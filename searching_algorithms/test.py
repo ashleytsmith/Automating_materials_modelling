@@ -184,6 +184,8 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
 
     original_shape = (bins_shape[0] -2,bins_shape[1] - 2,bins_shape[2] -2)
 
+    # loop over the unique pairs excluding edge cases for 3 of the lower faces
+
     for i,j,k in np.ndindex(original_shape):
 
         i = i + 1
@@ -197,15 +199,13 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
         bin_neighbours = []
         bin_neighbours.append(bin)
 
-        # slicing routine along z axis
+        # slicing routine using slices along the z axis
         bin_neighbours.extend(bins[i+1][j-1][k-1:k+2])
         bin_neighbours.extend(bins[i+1][j][k-1:k+2])
         bin_neighbours.extend(bins[i+1][j+1][k-1:k+2])
         bin_neighbours.extend(bins[i][j+1][k-1:k+2])
-        bin_neighbours.extend([bins[i+1][j][k]])
+        bin_neighbours.extend([bins[i][j][k+1]])
 
-        # works fine for all bins two layers inside but need to do edge cases for 3 faces one layer in
-       
         for atoms_info in bin_neighbours:
 
             positions = []
@@ -226,6 +226,42 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
 
         atoms = Atoms(all_neighbours_symbols, positions= all_neighbours_positions, cell=cell)
         traj.write(atoms=atoms,mode='a')
+
+    # fill in the missed edge cases by looping over the 3 lower edges which were missed by the first loop
+
+    bin_neighbours = []
+
+    for i,j in np.ndindex(original_shape[0],original_shape[1]):
+
+        i = i + 1
+        j = j + 1
+
+        bin_neighbours.extend([bins[i][j][0]])
+
+    for i,k in np.ndindex(original_shape[0],original_shape[2]):
+
+        i = i + 1
+        k = k + 1
+
+        bin_neighbours.extend(bins[i][0][k-1:k+2])
+
+    for j,k in np.ndindex(original_shape[1],original_shape[2]):
+
+        j = j + 1
+        k = k + 1
+
+        bin_neighbours.extend(bins[0][j-1][k-1:k+2])
+        bin_neighbours.extend(bins[0][j][k-1:k+2])
+        bin_neighbours.extend(bins[0][j+1][k-1:k+2])
+
+
+    for atoms_info in bin_neighbours:
+
+        if atoms_info:
+
+            pos_list,sym_list = get_bin_info(atoms_info)
+            all_positions.extend(pos_list)
+            all_symbols.extend(sym_list)
 
     atoms = Atoms(all_symbols, positions= all_positions, cell=cell)
     traj.write(atoms=atoms,mode='a')

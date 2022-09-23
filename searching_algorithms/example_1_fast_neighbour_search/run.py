@@ -8,6 +8,7 @@ import numpy as np
 from searching_algorithms import input_and_ouput as io
 from searching_algorithms import sorting
 from searching_algorithms import geometry
+from searching_algorithms import searching
 
 from searching_algorithms.example_1_fast_neighbour_search import test
 
@@ -32,7 +33,8 @@ def run():
     # generate some bin positions. Just for visualsing. Not needed for actual computation.
     
     #test.view_the_grid(input_structure)
-    bin_positions, edges = geometry.generate_grid(cell,bins_per_dimension)
+    #bin_positions, edges = geometry.generate_grid(cell,bins_per_dimension)
+
 
     # binning procedure
  
@@ -40,21 +42,6 @@ def run():
     bins_shape_before_sorting = (bins_per_dimension,bins_per_dimension,bins_per_dimension)
     bins, bins_shape = sorting.sort_into_bins(positions,symbols,indices,cell,bins_shape_before_sorting, True)
 
-
-    # pad the bin
-
-    #print(np.shape(bins))
-
-    #print(bins)
-
-    #bins = np.pad(bins,1,mode='wrap')
-
-    #print(np.shape(bins))
-
-    #print(bins_shape)
-
-
-    
     # test the binning procedure
 
     #test.count_occupied_bins(bins,bins_shape)
@@ -64,7 +51,13 @@ def run():
 
     #test.show_atoms_in_each_bin(bins,cell,False)
 
-    test.show_neighbours_of_each_bin(bins,bins_shape,cell)
+    #test.show_neighbours_of_each_bin(bins,bins_shape,cell)
+
+    # perform search
+
+    searching.neighbour_search(bins,bins_shape)
+
+
 
 
 
@@ -83,8 +76,6 @@ def run():
     start = datetime.datetime.now()
 
     finish = datetime.datetime.now()
-
-  
 
     print(finish-start)
 

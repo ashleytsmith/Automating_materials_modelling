@@ -1,3 +1,6 @@
+import os
+
+
 def expected_neighbours(symbol):
 
     '''
@@ -19,19 +22,17 @@ def expected_neighbours(symbol):
     return x
 
 
+def get_file_path():
 
-number_of_atoms_in_structure = 108
-oxygen_of_the_first_acid_site = 107  
-Al_of_the_first_acid_site = 7
-hydrogen_acid_site = 108  
+    input_structure = os.getcwd() + "/Input_structures/CHA.traj"
 
+    return input_structure
 
-cut_off_distance = 2
+    
 silicon_expected_neighbours = 4
 oxygen_expected_neighbours = 2
 hydrogen_expected_neighbours = 1
 
 
-
-input_structure = os.getcwd() + "../Input_structures/CHA.traj"
-output_folder = "Generated_structures"
+bins_per_dimension = 3
+cut_off_distance = 2.4

@@ -26,16 +26,18 @@ def get_cell_vectors(cell):
     a = cell[0]
     b = cell[1]
     c = cell[2]
- 
+
     return a,b,c
 
 
-def project_along_axis(x_in,y_in,z_in,axis):
+def convert_to_scaled_positions(cell,positions):
 
     '''
     Projects the input vector along the desired axis.
     '''
 
-    projection = np.dot([x_in,y_in,z_in],axis) / np.dot(axis,axis)
+    scaled_positions = np.linalg.solve(cell.T, np.transpose(positions)).T
+   
 
-    return projection
+    return scaled_positions
+

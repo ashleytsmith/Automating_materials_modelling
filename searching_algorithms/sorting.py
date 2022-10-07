@@ -12,9 +12,17 @@ def sort_into_bins(positions,symbols,indices,cell,bins_shape, repeat):
 
     a,b,c = geometry.get_cell_vectors(cell)
 
-    slicing_order = (a,b,c)
+    x = [1,0,0]
+    y = [0,1,0]
+    z = [0,0,1]
 
-    atoms_info = create_atom_info_array(positions,symbols,indices)
+    scaled_positions = geometry.convert_to_scaled_positions(cell,positions)
+
+    slicing_order = ('a','b','c')
+    #slicing_order = ('b','a','c')
+    #slicing_order = ('c','a','b')
+
+    atoms_info = create_atom_info_array(positions,scaled_positions,symbols,indices)
 
     single_sliced_positions = slice_along_axis(slicing_order[0],atoms_info,bins_shape[0])
     
@@ -44,23 +52,27 @@ def sort_into_bins(positions,symbols,indices,cell,bins_shape, repeat):
     return bins, bins_shape
 
   
-def create_atom_info_array(positions,symbols,indices):
+def create_atom_info_array(positions,scaled_positions,symbols,indices):
 
     '''
     Creates a structured array (very similar to a struct in C) with all required variables for each atom accesible from the same element.
     '''
 
-    data_types = np.dtype([('x','f'),('y','f'),('z','f'),('i','i'),('s','U10')])
+    data_types = np.dtype([('x','f'),('y','f'),('z','f'),('a','f'),('b','f'),('c','f'),('i','i'),('s','U10')])
     array_length = len(positions)
     atoms_info = np.empty(array_length,dtype=data_types)
 
     x,y,z = zip(*[(pos[0],pos[1],pos[2]) for pos in positions])
+    a,b,c = zip(*[(pos[0],pos[1],pos[2]) for pos in scaled_positions])
     i = [i for i in indices]
     s = [s for s in symbols]
 
     atoms_info['x']=x
     atoms_info['y']=y
     atoms_info['z']=z
+    atoms_info['a']=a
+    atoms_info['b']=b
+    atoms_info['c']=c
     atoms_info['i']=i
     atoms_info['s']=s
 
@@ -78,9 +90,9 @@ def slice_along_axis(axis,atoms_info,number_of_bins):
 
     for stuff in atoms_info:
 
-        projection = geometry.project_along_axis(stuff['x'],stuff['y'],stuff['z'],axis)
+        scaled_position = stuff[axis]
 
-        bin_index = assign_to_bin(projection,number_of_bins)
+        bin_index = assign_to_bin(scaled_position,number_of_bins)
 
         bins[bin_index].append(stuff)
 
@@ -97,6 +109,10 @@ def assign_to_bin(projection,number_of_bins):
     if projection < 0:
 
         bin_index = 0
+
+    elif projection > 1:
+
+        bin_index = number_of_bins - 1
 
     else:
 

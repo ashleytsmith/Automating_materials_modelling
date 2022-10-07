@@ -1,4 +1,4 @@
-from multiprocessing import shared_memory
+import collections
 import numpy as np
 
 from ase import Atoms
@@ -40,6 +40,7 @@ def count_occupied_bins(bins,bins_shape):
     bin_count = 0
     atom_count = 0
     atom_count_per_bin = []
+    bin_ids = []
 
     for i,j,k in np.ndindex(bins_shape):
 
@@ -52,11 +53,20 @@ def count_occupied_bins(bins,bins_shape):
             atoms_in_bin = len(bin_contents.indices)
             atom_count += atoms_in_bin
             atom_count_per_bin.append(atoms_in_bin)
+            bin_ids.append(id(bin_contents))
 
+   
+    
+    unique = [item for item, count in collections.Counter(bin_ids).items() if count == 1]
+    duplicates = [item for item, count in collections.Counter(bin_ids).items() if count > 1]
+   
     print('atom count per ocuupied bin is ' + str(atom_count_per_bin))
     print('total number of bins is ' + str(total_bins))
     print('number of occipied bins is ' + str(bin_count))
     print('atom count is ' + str(atom_count))
+    print(len(bin_ids), 'bin ids', bin_ids )
+    print(len(unique),  ' unique id(s)', unique)
+    print(len(duplicates) , 'duplicate id(s)', duplicates)
 
 
 def test_bin_assignment_along_first_axis(bins,bin_positions,cell):
@@ -65,7 +75,7 @@ def test_bin_assignment_along_first_axis(bins,bin_positions,cell):
     Test bin assignment along the first axis of the bins object. 
     Returns a movie which shows which bin each atom was assigned to.
     '''
-
+    
     all_positions = []
     all_symbols = []
     
@@ -127,7 +137,7 @@ def get_bin_info(atoms_info):
     return positions, symbols
 
 
-def show_atoms_in_each_bin(bins,cell,showall = True):
+def show_atoms_in_each_bin(bins,cell,show_empty_bins = True):
 
     '''
     Shows a movie of the atoms in all the different bins. 
@@ -138,7 +148,9 @@ def show_atoms_in_each_bin(bins,cell,showall = True):
     
     traj = Trajectory('test.traj','w') 
 
-    for i,j,k in np.ndindex(np.shape(bins)):
+    shape = np.shape(bins)
+
+    for i,j,k in np.ndindex(shape):
 
         positions = []
         symbols = []
@@ -153,13 +165,56 @@ def show_atoms_in_each_bin(bins,cell,showall = True):
             all_positions.extend(pos_list)
             all_symbols.extend(sym_list)
 
-            if not showall:
+            if not show_empty_bins:
 
                 atoms = Atoms(symbols, positions= positions, cell=cell)
                 traj.write(atoms=atoms,mode='a')
 
-        if showall:
+        if show_empty_bins:
 
+            atoms = Atoms(symbols, positions= positions, cell=cell)
+            traj.write(atoms=atoms,mode='a')
+
+    atoms = Atoms(all_symbols, positions= all_positions, cell=cell)
+    traj.write(atoms=atoms,mode='a')
+
+    traj.close()
+
+
+
+def show_outer_layer_of_bins(bins,cell):
+
+    '''
+    Shows a movie of the atoms in all the different bins. 
+    '''
+
+    all_positions = []
+    all_symbols = []
+    
+    traj = Trajectory('test.traj','w') 
+
+    shape = np.shape(bins)
+
+    for i,j,k in np.ndindex(shape):
+
+        edge_member = i == 0 or i == shape[0] - 1 or j == 0 or j == shape[1] - 1 or k == 0 or k == shape[2] - 1
+
+    
+        if edge_member:
+
+            positions = []
+            symbols = []
+
+            atoms_info = bins[i][j][k]
+
+            if atoms_info:
+
+                pos_list,sym_list = get_bin_info(atoms_info)
+                positions.extend(pos_list)
+                symbols.extend(sym_list)
+                all_positions.extend(pos_list)
+                all_symbols.extend(sym_list)
+    
             atoms = Atoms(symbols, positions= positions, cell=cell)
             traj.write(atoms=atoms,mode='a')
 
@@ -206,12 +261,16 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
         bin_neighbours.extend(bins[i][j+1][k-1:k+2])
         bin_neighbours.extend([bins[i][j][k+1]])
 
+        indices = []
+
         for atoms_info in bin_neighbours:
 
             positions = []
             symbols = []
-
+            
             if atoms_info:
+
+                indices.append(atoms_info.indices)
 
                 pos_list,sym_list = get_bin_info(atoms_info)
                 positions.extend(pos_list)
@@ -226,6 +285,39 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
 
         atoms = Atoms(all_neighbours_symbols, positions= all_neighbours_positions, cell=cell)
         traj.write(atoms=atoms,mode='a')
+
+        print('   ')
+        print('current bin ', i,j,k)
+        print('neighbouring bins ')
+        print(i + 1, j - 1, k - 1)
+        print(i + 1, j - 1, k)
+        print(i + 1, j - 1, k + 1)
+        print('  ')
+        print(i + 1, j, k - 1)
+        print(i + 1, j, k)
+        print(i + 1, j, k + 1)
+        print('  ')
+        print(i + 1, j + 1, k - 1)
+        print(i + 1, j + 1, k)
+        print(i + 1, j + 1, k + 1)
+        print('  ')
+        print(i, j + 1, k - 1)
+        print(i, j + 1, k)
+        print(i, j + 1, k + 1)
+        print('  ')
+        print(i, j, k + 1)
+        
+        if bin:
+
+            print('bin indices', bin.indices)
+            print('neighbour indices',indices)
+
+        else:
+            
+            print('bin empty')
+        
+        
+    
 
     # fill in the missed edge cases by looping over the 3 lower edges which were missed by the first loop
 
@@ -254,10 +346,13 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
         bin_neighbours.extend(bins[0][j][k-1:k+2])
         bin_neighbours.extend(bins[0][j+1][k-1:k+2])
 
+    indices = []
 
     for atoms_info in bin_neighbours:
 
         if atoms_info:
+
+            indices.append(atoms_info.indices)
 
             pos_list,sym_list = get_bin_info(atoms_info)
             all_positions.extend(pos_list)
@@ -266,10 +361,52 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
     atoms = Atoms(all_symbols, positions= all_positions, cell=cell)
     traj.write(atoms=atoms,mode='a')
 
+    print('        ')
+    print('neighbour indices for edge cases',indices)
+
     traj.close()
 
 
 
+def check_for_repeat_bonds(bond_dict,indices):
+
+    fail_count = 0
+    pass_count = 0
+
+    for i in indices:
+
+        neighbours = bond_dict[i]
+        unique_neighbours = [item for item, count in collections.Counter(neighbours).items()]
+    
+        number_of_neighbours = len(neighbours)
+        number_of_unique_neighbours = len(unique_neighbours)
+        
+        if number_of_neighbours > number_of_unique_neighbours:
+
+            print( 'fail', i, number_of_neighbours, ' neighbours ', number_of_unique_neighbours, ' unique neighbours ' )
+            fail_count +=1  
+
+        else: 
+
+            print('pass',  i, number_of_neighbours, ' neighbours ', number_of_unique_neighbours, ' unique neighbours ' )
+            pass_count +=1
+
+    print(fail_count, ' total fails')
+    print(pass_count, ' total passes')
+
+
+
+
+
+    
+
+
+
+
+  
+         
+
+   
         
 
     

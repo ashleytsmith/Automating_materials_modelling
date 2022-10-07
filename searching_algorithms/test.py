@@ -60,9 +60,9 @@ def count_occupied_bins(bins,bins_shape):
     unique = [item for item, count in collections.Counter(bin_ids).items() if count == 1]
     duplicates = [item for item, count in collections.Counter(bin_ids).items() if count > 1]
    
-    print('atom count per ocuupied bin is ' + str(atom_count_per_bin))
+    print('atom count per occupied bin is ' + str(atom_count_per_bin))
     print('total number of bins is ' + str(total_bins))
-    print('number of occipied bins is ' + str(bin_count))
+    print('number of occupied bins is ' + str(bin_count))
     print('atom count is ' + str(atom_count))
     print(len(bin_ids), 'bin ids', bin_ids )
     print(len(unique),  ' unique id(s)', unique)
@@ -286,38 +286,6 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
         atoms = Atoms(all_neighbours_symbols, positions= all_neighbours_positions, cell=cell)
         traj.write(atoms=atoms,mode='a')
 
-        print('   ')
-        print('current bin ', i,j,k)
-        print('neighbouring bins ')
-        print(i + 1, j - 1, k - 1)
-        print(i + 1, j - 1, k)
-        print(i + 1, j - 1, k + 1)
-        print('  ')
-        print(i + 1, j, k - 1)
-        print(i + 1, j, k)
-        print(i + 1, j, k + 1)
-        print('  ')
-        print(i + 1, j + 1, k - 1)
-        print(i + 1, j + 1, k)
-        print(i + 1, j + 1, k + 1)
-        print('  ')
-        print(i, j + 1, k - 1)
-        print(i, j + 1, k)
-        print(i, j + 1, k + 1)
-        print('  ')
-        print(i, j, k + 1)
-        
-        if bin:
-
-            print('bin indices', bin.indices)
-            print('neighbour indices',indices)
-
-        else:
-            
-            print('bin empty')
-        
-        
-    
 
     # fill in the missed edge cases by looping over the 3 lower edges which were missed by the first loop
 
@@ -361,14 +329,17 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
     atoms = Atoms(all_symbols, positions= all_positions, cell=cell)
     traj.write(atoms=atoms,mode='a')
 
-    print('        ')
-    print('neighbour indices for edge cases',indices)
+   
 
     traj.close()
 
 
 
 def check_for_repeat_bonds(bond_dict,indices):
+
+    '''
+    Checks if a list of bonds has repeat elements.
+    '''
 
     fail_count = 0
     pass_count = 0

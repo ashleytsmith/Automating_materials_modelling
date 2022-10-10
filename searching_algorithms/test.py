@@ -5,29 +5,31 @@ from ase import Atoms
 from ase.io.trajectory import Trajectory
 
 from searching_algorithms import input_and_ouput as io
-from searching_algorithms import geometry
 
-def view_the_grid(input_structure):
+
+def show_the_grid(cell, bin_positions, show = True):
 
     '''
     Displays the grid by putting a hydrogen atom at each of the grid positions.
     '''
 
-    points_per_dimension = 4
-    atoms,pos,sym, cell = io.read_trajfile(input_structure)
-    bin_positions,_ = geometry.generate_grid(cell,points_per_dimension)
-    
     n_dim = 3
-    number_of_points = pow(points_per_dimension,n_dim) 
-
+    shape = np.shape(bin_positions)
+    number_of_points = shape[0]* shape[1]* shape[2]
+    
     positions = np.reshape(bin_positions,(number_of_points,n_dim))
     positions = np.ndarray.tolist(positions)
-
     symbols = np.repeat("H", len(positions))
 
     atoms = Atoms(symbols, positions= positions, cell=cell)
 
-    io.save_file(atoms,'test.traj')
+    if show:
+
+        io.save_file(atoms,'test.traj')
+
+    return atoms
+
+    
 
 
 def count_occupied_bins(bins,bins_shape):
@@ -69,6 +71,8 @@ def count_occupied_bins(bins,bins_shape):
     print(len(duplicates) , 'duplicate id(s)', duplicates)
 
 
+
+
 def test_bin_assignment_along_first_axis(bins,bin_positions,cell):
 
     '''
@@ -78,6 +82,7 @@ def test_bin_assignment_along_first_axis(bins,bin_positions,cell):
     
     all_positions = []
     all_symbols = []
+    grid = show_the_grid(cell, bin_positions, show = False)
     
     traj = Trajectory('test.traj','w') 
 
@@ -87,8 +92,6 @@ def test_bin_assignment_along_first_axis(bins,bin_positions,cell):
 
         positions = []
         symbols = []
-
-        # add atoms positions
 
         for j,k in np.ndindex(np.shape(single_sliced)):
 
@@ -102,24 +105,16 @@ def test_bin_assignment_along_first_axis(bins,bin_positions,cell):
                 all_positions.extend(pos_list)
                 all_symbols.extend(sym_list)
 
-                
-        #add bin positions
-
-        for l,m,n in np.ndindex(np.shape(bins)):
-
-            positions.append(bin_positions[l][m][n])
-            symbols.append("H")
-
-            all_positions.append(bin_positions[l][m][n])
-            all_symbols.append("H")
-
         atoms = Atoms(symbols, positions= positions, cell=cell)
+        atoms.extend(grid)
         traj.write(atoms=atoms,mode='a')
 
     atoms = Atoms(all_symbols, positions= all_positions, cell=cell)
+    atoms.extend(grid)
     traj.write(atoms=atoms,mode='a')
 
     traj.close()
+
 
 
 def get_bin_info(atoms_info):
@@ -137,14 +132,17 @@ def get_bin_info(atoms_info):
     return positions, symbols
 
 
-def show_atoms_in_each_bin(bins,cell,show_empty_bins = True):
+def show_atoms_in_each_bin(bins,cell, bin_positions,show_empty_bins = True, only_show_edges = False):
 
     '''
     Shows a movie of the atoms in all the different bins. 
     '''
 
+    show = True
+
     all_positions = []
     all_symbols = []
+    grid = show_the_grid(cell, bin_positions, show = False)
     
     traj = Trajectory('test.traj','w') 
 
@@ -152,55 +150,11 @@ def show_atoms_in_each_bin(bins,cell,show_empty_bins = True):
 
     for i,j,k in np.ndindex(shape):
 
-        positions = []
-        symbols = []
+        if only_show_edges:
 
-        atoms_info = bins[i][j][k]
+            show = i == 0 or i == shape[0] - 1 or j == 0 or j == shape[1] - 1 or k == 0 or k == shape[2] - 1
 
-        if atoms_info:
-
-            pos_list,sym_list = get_bin_info(atoms_info)
-            positions.extend(pos_list)
-            symbols.extend(sym_list)
-            all_positions.extend(pos_list)
-            all_symbols.extend(sym_list)
-
-            if not show_empty_bins:
-
-                atoms = Atoms(symbols, positions= positions, cell=cell)
-                traj.write(atoms=atoms,mode='a')
-
-        if show_empty_bins:
-
-            atoms = Atoms(symbols, positions= positions, cell=cell)
-            traj.write(atoms=atoms,mode='a')
-
-    atoms = Atoms(all_symbols, positions= all_positions, cell=cell)
-    traj.write(atoms=atoms,mode='a')
-
-    traj.close()
-
-
-
-def show_outer_layer_of_bins(bins,cell):
-
-    '''
-    Shows a movie of the atoms in all the different bins. 
-    '''
-
-    all_positions = []
-    all_symbols = []
-    
-    traj = Trajectory('test.traj','w') 
-
-    shape = np.shape(bins)
-
-    for i,j,k in np.ndindex(shape):
-
-        edge_member = i == 0 or i == shape[0] - 1 or j == 0 or j == shape[1] - 1 or k == 0 or k == shape[2] - 1
-
-    
-        if edge_member:
+        if show:
 
             positions = []
             symbols = []
@@ -214,19 +168,28 @@ def show_outer_layer_of_bins(bins,cell):
                 symbols.extend(sym_list)
                 all_positions.extend(pos_list)
                 all_symbols.extend(sym_list)
-    
-            atoms = Atoms(symbols, positions= positions, cell=cell)
-            traj.write(atoms=atoms,mode='a')
+
+                if not show_empty_bins:
+
+                    atoms = Atoms(symbols, positions= positions, cell=cell)
+                    atoms.extend(grid)
+                    traj.write(atoms=atoms,mode='a')
+
+            if show_empty_bins:
+
+                atoms = Atoms(symbols, positions= positions, cell=cell)
+                atoms.extend(grid)
+                traj.write(atoms=atoms,mode='a')
 
     atoms = Atoms(all_symbols, positions= all_positions, cell=cell)
+    atoms.extend(grid)
     traj.write(atoms=atoms,mode='a')
 
     traj.close()
 
 
 
-
-def show_neighbours_of_each_bin(bins,bins_shape,cell):
+def show_neighbours_of_each_bin(bins,bins_shape,cell, bin_positions):
 
     '''
     Shows a movie of the unique neighbour pairs for every occupied bin.
@@ -236,6 +199,7 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
 
     all_positions = []
     all_symbols = []
+    grid = show_the_grid(cell, bin_positions, show = False)
 
     original_shape = (bins_shape[0] -2,bins_shape[1] - 2,bins_shape[2] -2)
 
@@ -254,36 +218,40 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
         bin_neighbours = []
         bin_neighbours.append(bin)
 
-        # slicing routine using slices along the z axis
-        bin_neighbours.extend(bins[i+1][j-1][k-1:k+2])
-        bin_neighbours.extend(bins[i+1][j][k-1:k+2])
-        bin_neighbours.extend(bins[i+1][j+1][k-1:k+2])
-        bin_neighbours.extend(bins[i][j+1][k-1:k+2])
-        bin_neighbours.extend([bins[i][j][k+1]])
+        if bin:
 
-        indices = []
+            bin_pos,bin_sym = get_bin_info(bin)
 
-        for atoms_info in bin_neighbours:
+            # slicing routine using slices along the z axis
+            bin_neighbours.extend(bins[i+1][j-1][k-1:k+2])
+            bin_neighbours.extend(bins[i+1][j][k-1:k+2])
+            bin_neighbours.extend(bins[i+1][j+1][k-1:k+2])
+            bin_neighbours.extend(bins[i][j+1][k-1:k+2])
+            bin_neighbours.extend([bins[i][j][k+1]])
 
-            positions = []
-            symbols = []
-            
-            if atoms_info:
+            for atoms_info in bin_neighbours:
 
-                indices.append(atoms_info.indices)
+                positions = []
+                symbols = []
+                
+                if atoms_info:
 
-                pos_list,sym_list = get_bin_info(atoms_info)
-                positions.extend(pos_list)
-                symbols.extend(sym_list)
-                all_neighbours_positions.extend(pos_list)
-                all_neighbours_symbols.extend(sym_list)
-                all_positions.extend(pos_list)
-                all_symbols.extend(sym_list)
+                    pos_list,sym_list = get_bin_info(atoms_info)
+                    positions.extend(bin_pos)
+                    symbols.extend(bin_sym)
+                    positions.extend(pos_list)
+                    symbols.extend(sym_list)
+                    all_neighbours_positions.extend(pos_list)
+                    all_neighbours_symbols.extend(sym_list)
+                    all_positions.extend(pos_list)
+                    all_symbols.extend(sym_list)
 
-                atoms = Atoms(symbols, positions= positions, cell=cell)
-                traj.write(atoms=atoms,mode='a')
+                    atoms = Atoms(symbols, positions= positions, cell=cell)
+                    atoms.extend(grid)
+                    traj.write(atoms=atoms,mode='a')
 
         atoms = Atoms(all_neighbours_symbols, positions= all_neighbours_positions, cell=cell)
+        atoms.extend(grid)
         traj.write(atoms=atoms,mode='a')
 
 
@@ -314,22 +282,17 @@ def show_neighbours_of_each_bin(bins,bins_shape,cell):
         bin_neighbours.extend(bins[0][j][k-1:k+2])
         bin_neighbours.extend(bins[0][j+1][k-1:k+2])
 
-    indices = []
-
     for atoms_info in bin_neighbours:
 
         if atoms_info:
-
-            indices.append(atoms_info.indices)
 
             pos_list,sym_list = get_bin_info(atoms_info)
             all_positions.extend(pos_list)
             all_symbols.extend(sym_list)
 
     atoms = Atoms(all_symbols, positions= all_positions, cell=cell)
+    atoms.extend(grid)
     traj.write(atoms=atoms,mode='a')
-
-   
 
     traj.close()
 

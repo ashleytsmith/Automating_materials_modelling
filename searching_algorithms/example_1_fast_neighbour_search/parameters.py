@@ -2,7 +2,7 @@ import os
 
 
 def expected_neighbours(symbol):
-
+    
     '''
     Returns expected number of neighbours for a given atom type.
     '''
@@ -28,11 +28,11 @@ def get_file_path():
 
     return input_structure
 
-    
+
 silicon_expected_neighbours = 4
 oxygen_expected_neighbours = 2
 hydrogen_expected_neighbours = 1
 
 
-bins_per_dimension = 3
+bins_shape = (3, 3, 3)
 cut_off_distance = 2.4

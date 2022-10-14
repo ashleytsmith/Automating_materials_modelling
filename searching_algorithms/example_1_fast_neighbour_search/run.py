@@ -1,63 +1,43 @@
 import numpy as np
+import datetime
 
+from searching_algorithms import sort_atoms_into_bins
+from searching_algorithms import neighbour_search
 from searching_algorithms import input_and_ouput as io
-from searching_algorithms import sorting
-from searching_algorithms import geometry
-from searching_algorithms import searching
-
-from searching_algorithms.example_1_fast_neighbour_search import test
-from searching_algorithms.example_1_fast_neighbour_search import parameters
 
 
-'''
-Searches fo the nearest neighbours of each atom in a 3D cell.
-'''
+def run(bins_shape, cut_off_distance, atoms):
+
+    '''
+    Searches fo the nearest neighbours of each atom in a 3D cell.
+    '''
+
+    # get atom properties
+
+    positions, symbols, cell = io.get_atom_properties(atoms)
+    number_of_atoms = len(positions)
+    indices = np.arange(number_of_atoms)
 
 
-def run():
-
-    # input params
-
-    bins_shape = parameters.bins_shape
-    cut_off_distance = parameters.cut_off_distance
-    input_structure = parameters.get_file_path()
-
-    # read infile
-
-    atoms, positions, symbols, cell = io.read_trajfile(input_structure)
-
-    # generate some bin positions. Just for visualsing. Not needed for actual computation.
-
-    bin_positions = geometry.generate_grid(cell, bins_shape)
-    #test.show_the_grid(cell, bin_positions)
+    start = datetime.datetime.now()
 
     # binning procedure
 
-    number_of_atoms = len(positions)
-    indices = np.arange(number_of_atoms)
-    bins_shape_before_sorting = bins_shape
-    bins, bins_shape = sorting.sort_into_bins(
-        positions, symbols, indices, cell, bins_shape_before_sorting, repeat=True)
+    bins, bins_shape = sort_atoms_into_bins.sort_into_bins(
+        positions, symbols, indices, cell, bins_shape, repeat=True)
 
-    # test the binning procedure
-
-    # test.count_occupied_bins(bins,bins_shape)
-
-    #test.test_bin_assignment_along_first_axis(bins, bin_positions,cell)
-
-    #test.show_atoms_in_each_bin(bins,cell, bin_positions, show_empty_bins = False, only_show_edges = False)
 
     # perform neighbour search
 
-    bond_dict = searching.neighbour_search(
+    bond_dict = neighbour_search.neighbour_search(
         bins, bins_shape, number_of_atoms, cut_off_distance)
 
-    # test neighbour search
 
-    #test.show_neighbours_of_each_bin(bins,bins_shape,cell, bin_positions)
+    finish = datetime.datetime.now()
 
-    # test search
+    run_time = finish-start
 
-    # test.check_number_of_bonds_found(bond_dict,symbols,indices)
+    return bond_dict, run_time
 
-    # test.check_for_repeat_bonds(bond_dict,indices)
+
+  

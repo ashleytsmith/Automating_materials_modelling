@@ -331,7 +331,6 @@ def check_for_repeat_bonds(bond_dict,indices):
 
 
 
-
     
 
 

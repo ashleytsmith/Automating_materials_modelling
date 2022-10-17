@@ -9,6 +9,8 @@
 
 *.pkl
 
+*scaling_plot.png
+
 
 ##############################
 ## OS X files 

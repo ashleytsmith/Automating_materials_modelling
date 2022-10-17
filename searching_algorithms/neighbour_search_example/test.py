@@ -7,10 +7,10 @@ from searching_algorithms import sort_atoms_into_bins
 from searching_algorithms import geometry
 from searching_algorithms import neighbour_search
 
-from searching_algorithms.example_1_fast_neighbour_search import parameters
-from searching_algorithms.example_1_fast_neighbour_search import benchmarking
+from searching_algorithms.neighbour_search_example import parameters
+from searching_algorithms.neighbour_search_example import benchmarking
 from searching_algorithms import build
-from searching_algorithms.example_1_fast_neighbour_search.run import run as run_fast_neighbour_search
+from searching_algorithms.neighbour_search_example.run import run as run_neighbour_search
 
 
 def show_the_grid(cell, bin_positions):
@@ -94,7 +94,7 @@ def test_scaling_behavour(reps):
         atoms = structures[rep]
         symbols = atoms.get_chemical_symbols()
         indices = np.arange(len(symbols))
-        bond_dict, run_time = run_fast_neighbour_search(bins_shapes[rep], cut_off_distance, atoms)
+        bond_dict, run_time = run_neighbour_search(bins_shapes[rep], cut_off_distance, atoms)
         check_number_of_bonds_found(bond_dict,symbols,indices)
 
 

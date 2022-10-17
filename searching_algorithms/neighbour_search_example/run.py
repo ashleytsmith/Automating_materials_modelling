@@ -32,7 +32,6 @@ def run(bins_shape, cut_off_distance, atoms):
     bond_dict = neighbour_search.neighbour_search(
         bins, bins_shape, number_of_atoms, cut_off_distance)
 
-
     finish = datetime.datetime.now()
 
     run_time = finish-start

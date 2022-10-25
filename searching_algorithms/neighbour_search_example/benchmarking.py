@@ -14,7 +14,7 @@ from scipy.spatial import cKDTree
 
 
 
-def run_benchmarking(method,reps,runs):
+def run_benchmarking(method,reps,runs): 
 
     '''
     Run a given method for larger and larger super cells for a certain number of repetitions to test the scaling.
@@ -61,7 +61,7 @@ def run_benchmarking(method,reps,runs):
 
     all_reps = list(range(1, reps + 1))
     repetitions = len(all_reps) 
-    structures = build.repeat_structure(base_atoms,all_reps)
+    structures = build.repeat_structures(base_atoms,all_reps)
     bins_shapes = generate_bin_shapes(base_bins_shape,repetitions)
 
     # run for different system sizes

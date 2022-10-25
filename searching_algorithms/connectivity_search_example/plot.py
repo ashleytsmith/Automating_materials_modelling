@@ -1,0 +1,166 @@
+import copy
+import numpy as np
+
+from searching_algorithms import build
+from searching_algorithms import input_and_ouput as io
+from ase.io.trajectory import Trajectory
+from ase import Atoms
+
+from ase.io import write
+from ase.utils import hsv
+
+
+def plot(neighbour_info, atoms):
+
+    connectivity_search_movie(neighbour_info, atoms)
+
+
+
+def connectivity_search_movie(neighbour_info, atoms):
+
+    '''
+    Movie of the shells being filled for a 2 by 2 super cell from various different views.
+    '''
+
+    shells = []
+    views = [1]
+    number_of_atoms = len(atoms)
+
+    # repeat the atoms and the neighbour info dictionary 
+
+    atoms = build.repeat_structure(atoms, 2)
+    reps = range(1,7)
+
+    for i in range(0,len(neighbour_info)):
+
+        original_neighbour_info = copy.deepcopy(neighbour_info)
+
+        for rep in reps:
+
+            rep_inds = [x+number_of_atoms*rep for x in original_neighbour_info[i]]
+            neighbour_info[i].extend(rep_inds)
+
+
+    # get atom shells in a list based on the neighbour info
+
+    shells = []
+
+    for i in range(0,len(neighbour_info)):
+
+        current_shell = [atoms[j] for j in neighbour_info[i]]
+
+        shells.append(current_shell)
+
+
+    # progressivly fill the shells
+
+    filling_shells = copy.deepcopy([shells[0]])
+    filled_shells = copy.deepcopy(shells[0])
+
+    for i in range(1,len(shells)):
+
+        filled_shells.extend(shells[i])
+        filling_shells.append(copy.deepcopy(filled_shells))
+
+    # pack nested lists of atom objects into list of atoms objects
+
+    cell = atoms.get_cell()
+
+    packed_shells = []
+
+    for i,shell in enumerate(filling_shells):
+
+        current_shell = build.pack_atom_objects(shell, cell)
+        packed_shells.append(current_shell)
+
+    # make movie
+
+    for i,shell in enumerate(packed_shells):
+
+        for view in views:
+
+            file_name = 'frame_' + str(i) + '_view_' + str(view) 
+            generate_render_files(shell, file_name, view)
+
+
+
+def check_output(shells):
+
+    for i,stuff in enumerate(shells):
+    
+        print('shell ' + str(i))
+        print(stuff.symbols)
+        print('   ')
+
+
+
+
+def generate_render_files(atoms, file_name, view, preview = False):
+
+    '''
+    Prepare inputs files for rendering using POVRAY.
+    '''
+
+    # prepare generic keywords
+
+    number_of_atoms = len(atoms)
+    symbols = atoms.get_chemical_symbols()
+
+    views = ['0x, 0y, 0z','-90x, 0y, 0z','0x, 90y, 90z']
+    rotation = views[view] 
+    
+    red = [229,23,23]
+    blue = [11,50,255]
+    cream = [239,199,159]
+
+    colors = [(red if s == 'O' else (cream if s =='Si' else (blue if s == 'Al' else None))) for s in symbols]
+    colors = [ [r/ 255, g/255, b/255] for r,g,b in colors]
+
+    # prepare povray kwargs
+
+    texture = ['glass',] * number_of_atoms
+    cell_line_thickness = 0.25
+    width = 1300 # option to set width in pixels
+    background_color = 'White'
+    transparent_background = False 
+    camera_dist = 100 # distance from camera to front atom
+    camera_type = 'perspective' # perspective, ultra_wide_angle
+    point_lights = [[(-1.,-2.,-3.),'Red'],[(-1,-4,-5), 'Blue']] # [[loc1, color1], [loc2, color2],...]
+    area_light = [(2., 3., 40.) ,'White', .7, .7, 3, 3]  # loc, color width, height, Nlamps_x, Nlamps_y
+    
+    # set keywords
+
+    generic_projection_settings = { 
+    'rotation': rotation,
+    'colors': colors,
+    }
+
+    povray_settings = { 
+
+    'canvas_width' : width,   
+    'camera_dist'  : camera_dist,                     
+    'camera_type'  : camera_type, 
+    'point_lights' : point_lights,
+    'area_light'   : area_light,
+    'transparent'  : transparent_background, 
+    'background'   : background_color,       
+    'textures'     : texture, 
+    'celllinewidth': cell_line_thickness, 
+    }
+
+    if preview:
+
+        # make prerender
+
+        write('Rendering/' + file_name + '.png', atoms, **generic_projection_settings)
+
+    else:
+
+         # prepare povray input
+
+       write('Rendering/' + file_name + '.pov', atoms,
+             **generic_projection_settings,
+                povray_settings=povray_settings)
+
+
+

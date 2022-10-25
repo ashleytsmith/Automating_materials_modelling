@@ -9,28 +9,30 @@ from searching_algorithms.neighbour_search_example.benchmarking import run_bench
 from searching_algorithms.neighbour_search_example.benchmarking import run_ase_neighbour_search 
 from searching_algorithms.neighbour_search_example.benchmarking import run_KDTree
 from searching_algorithms.neighbour_search_example.plot import plot as plot_benchmarking_results
-from searching_algorithms.neighbour_search_example import parameters
+from searching_algorithms.neighbour_search_example import parameters as neighbour_search_params
 from searching_algorithms.neighbour_search_example.test import test_scaling_behavour
 from searching_algorithms import input_and_ouput as io
 
 
-from searching_algorithms.connectivity_search import run as run_connectivtiy_search
-
+from searching_algorithms.connectivity_search_example.run import run as run_connectivtiy_search
+from searching_algorithms.connectivity_search_example import parameters as connectivity_search_params
+from searching_algorithms.connectivity_search_example.plot import plot as plot_connectivity
+from searching_algorithms.connectivity_search_example.run_rendering import run as run_rendering
 
 
 # reccommended input params
 
-bins_shape = parameters.bins_shape
-cut_off_distance = parameters.cut_off_distance
-input_structure = parameters.get_file_path()
+bins_shape = neighbour_search_params.bins_shape
+cut_off_distance = neighbour_search_params.cut_off_distance
+input_structure = neighbour_search_params.get_file_path()
 
 # read infile
 
-#atoms = io.read_trajfile(input_structure)
+atoms = io.read_trajfile(input_structure)
 
 # run neighbour search
 
-#bond_dict, run_time = run_neighbour_search(bins_shape, cut_off_distance, atoms)
+bond_dict, run_time = run_neighbour_search(bins_shape, cut_off_distance, atoms)
 
 # save
 
@@ -52,13 +54,17 @@ input_structure = parameters.get_file_path()
 #run_neighbour_search_benchmarking(run_KDTree,reps = 8,runs = 5)
 
 
-
-
-
 #run connectivity search
 
-center_atom = 7
-run_connectivtiy_search(center_atom)
+center_atom = connectivity_search_params.center_atom
+neighbour_info = run_connectivtiy_search(center_atom, skip = False)
+
+# plot connectivity results
+
+plot_connectivity(neighbour_info, atoms)
+run_rendering(1,10)
+
+
 
 
 

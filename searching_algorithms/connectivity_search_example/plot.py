@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import os
 
 from searching_algorithms import build
 from searching_algorithms import input_and_ouput as io
@@ -22,18 +23,19 @@ def connectivity_search_movie(neighbour_info, atoms):
     Movie of the shells being filled for a 2 by 2 super cell from various different views.
     '''
 
+    views = [0,1,2]
+
     shells = []
-    views = [1]
     number_of_atoms = len(atoms)
 
     # repeat the atoms and the neighbour info dictionary 
 
     atoms = build.repeat_structure(atoms, 2)
-    reps = range(1,7)
+    reps = range(1,8)
+
+    original_neighbour_info = copy.deepcopy(neighbour_info)
 
     for i in range(0,len(neighbour_info)):
-
-        original_neighbour_info = copy.deepcopy(neighbour_info)
 
         for rep in reps:
 
@@ -73,14 +75,26 @@ def connectivity_search_movie(neighbour_info, atoms):
         current_shell = build.pack_atom_objects(shell, cell)
         packed_shells.append(current_shell)
 
+
     # make movie
 
-    for i,shell in enumerate(packed_shells):
+    main_folder = 'Rendering/'
 
-        for view in views:
+    for view in views:
 
-            file_name = 'frame_' + str(i) + '_view_' + str(view) 
-            generate_render_files(shell, file_name, view)
+        sub_folder = 'view_' + str(view) + '/'
+            
+        if not os.path.isdir(main_folder + sub_folder):
+                
+            os.mkdir(main_folder + sub_folder)
+
+        for i,shell in enumerate(packed_shells):
+
+            file_path = sub_folder + 'frame_' + str(i) + '_view_' + str(view) 
+            generate_render_files(shell, file_path, view)
+
+
+    
 
 
 
@@ -95,7 +109,7 @@ def check_output(shells):
 
 
 
-def generate_render_files(atoms, file_name, view, preview = False):
+def generate_render_files(atoms, file_path, view, preview = False):
 
     '''
     Prepare inputs files for rendering using POVRAY.
@@ -107,7 +121,10 @@ def generate_render_files(atoms, file_name, view, preview = False):
     symbols = atoms.get_chemical_symbols()
 
     views = ['0x, 0y, 0z','-90x, 0y, 0z','0x, 90y, 90z']
+    zooms = [100, 110, 160]
+
     rotation = views[view] 
+    zoom = zooms[view]
     
     red = [229,23,23]
     blue = [11,50,255]
@@ -118,12 +135,12 @@ def generate_render_files(atoms, file_name, view, preview = False):
 
     # prepare povray kwargs
 
+    width = 400 # option to set width in pixels
     texture = ['glass',] * number_of_atoms
     cell_line_thickness = 0.25
-    width = 1300 # option to set width in pixels
     background_color = 'White'
     transparent_background = False 
-    camera_dist = 100 # distance from camera to front atom
+    camera_dist = zoom # distance from camera to front atom
     camera_type = 'perspective' # perspective, ultra_wide_angle
     point_lights = [[(-1.,-2.,-3.),'Red'],[(-1,-4,-5), 'Blue']] # [[loc1, color1], [loc2, color2],...]
     area_light = [(2., 3., 40.) ,'White', .7, .7, 3, 3]  # loc, color width, height, Nlamps_x, Nlamps_y
@@ -137,7 +154,7 @@ def generate_render_files(atoms, file_name, view, preview = False):
 
     povray_settings = { 
 
-    'canvas_width' : width,   
+    'canvas_width' : width,  
     'camera_dist'  : camera_dist,                     
     'camera_type'  : camera_type, 
     'point_lights' : point_lights,
@@ -152,13 +169,13 @@ def generate_render_files(atoms, file_name, view, preview = False):
 
         # make prerender
 
-        write('Rendering/' + file_name + '.png', atoms, **generic_projection_settings)
+        write('Rendering/' + file_path + '.png', atoms, **generic_projection_settings)
 
     else:
 
          # prepare povray input
 
-       write('Rendering/' + file_name + '.pov', atoms,
+       write('Rendering/' + file_path + '.pov', atoms,
              **generic_projection_settings,
                 povray_settings=povray_settings)
 

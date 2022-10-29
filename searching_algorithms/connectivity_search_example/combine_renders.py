@@ -19,7 +19,7 @@ def combine_images():
     img0_loc = (0,0)
     img1_loc = (0,250)
     img2_loc = (400,0)
-    file_path = 'Rendering/gif/connectivity_movie.gif'
+    file_path = 'Rendering/gif/connectivity_search_movie.gif'
 
 
     blank_canvas = np.zeros([800,800,3],dtype=np.uint8)

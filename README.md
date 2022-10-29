@@ -48,6 +48,6 @@ conda install -c conda-forge ase
 
 
 <p align="center">
-<img src="https://github.com/ashleytsmith/Useful_algorithms_for_materials_modelling/blob/main/Images_for_GitHub/connectivity_search_movie.mp4" width="400" alt="see images folder if image doesn't show"> 
+<img src="https://github.com/ashleytsmith/Useful_algorithms_for_materials_modelling/blob/main/Images_for_GitHub/connectivity_search_movie.png" width="400" alt="see images folder if image doesn't show"> 
 </p>
 

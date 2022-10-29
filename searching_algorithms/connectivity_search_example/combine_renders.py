@@ -1,4 +1,5 @@
 import os 
+import itertools
 
 import cv2
 import numpy as np
@@ -15,10 +16,10 @@ def combine_images():
     Comine the individual scenes into one larger PNG file.
     '''
 
-    main_folder = 'Rendering/gif/'
-    img0_loc = (0,0)
-    img1_loc = (0,250)
-    img2_loc = (400,0)
+    main_source_folder = 'Rendering/' 
+    main_target_folder = 'Rendering/gif/'
+    crop_list = [None, (10,0), (180,150)] # (top,bottom)
+    shift_list = [None, ('left',40), ('right',10)] # (left,right)
     file_path = 'Rendering/gif/connectivity_search_movie.gif'
 
 
@@ -27,40 +28,74 @@ def combine_images():
 
     paths = []
 
-
     # get paths and sort
     
     for view in range(0,3):
 
-        path_list = get_filepaths( '*view_' + str(view) + '.png')
+        path_list = get_filepaths( main_source_folder + 'view_' + str(view), '*view_' + str(view) + '.png')
         frames = [int(path.split('frame_')[-1].split('_')[0]) for path in path_list]
         path_list = [x for _, x in sorted(zip(frames, path_list))]
         paths.append(path_list)
 
+    #output folder
+
+    if not os.path.isdir(main_target_folder):
+        
+        os.mkdir(main_target_folder)
+
+    # get frames
+
+    num_frames = len(paths[0])
+    movie = []
+
+    for view in range(0,3):
+
+        act = []
+
+        for i in range(0,num_frames):
+
+            img = cv2.imread(paths[view][i])
+            act.append(img)
+
+        movie.append(act)
+
+    # cropping and chopping
+
+    for i, act in enumerate(movie):
+
+        if crop_list[i]:
+
+            for j, frame in enumerate(act):
+
+                movie[i][j] = crop_image(movie[i][j], crop_list[i][0], crop_list[i][1])
+
+        if shift_list[i]:
+
+            for j, frame in enumerate(act):
+                
+                movie[i][j] = shift_image(movie[i][j], shift_list[i][0], shift_list[i][1])
+
 
     # add images to canvas
 
-    num_frames = len(paths[0])
-    frames = []
+    for i, act in enumerate(movie):
 
-    if not os.path.isdir(main_folder):
-        
-        os.mkdir(main_folder)
+        for j, frame in enumerate(act):
 
-    for i in range(0,num_frames):
+            canvas = np.copy(blank_canvas)
+            movie[i][j] = add_image_to_canvas(canvas,movie[i][j], 0, 0)
+   
+    # write each frame to a file
 
-        canvas = np.copy(blank_canvas)
+    for i, act in enumerate(movie):
 
-        img0 = cv2.imread(paths[0][i])
-        img1 = cv2.imread(paths[1][i])
-        img2 = cv2.imread(paths[2][i])
+        for j, frame in enumerate(act):
 
-        canvas = add_image_to_canvas(canvas,img0,img0_loc[0],img0_loc[1])
-        canvas = add_image_to_canvas(canvas,img1,img1_loc[0],img1_loc[1])
-        canvas = add_image_to_canvas(canvas,img2,img2_loc[0],img2_loc[1])
-        
-        cv2.imwrite(main_folder + 'frame_' + str(i) + '.png', canvas) 
-        frames.append(canvas)
+            cv2.imwrite(main_target_folder + 'frame_' + str(i) + '_view_' + str(j) + '.png', movie[i][j]) 
+    
+    # flatten movie into list of frames
+
+    frames = list(itertools.chain(*movie))
 
     # combine into gif
 
@@ -76,16 +111,29 @@ def crop_image(img,top,bottom):
     return img
 
 
-def crop_images(paths,top,bottom):
+def shift_image(img, side, cut_size):
 
-    images = []
+    '''
+    Cut whitespace and add to the other side to shift the image on the canvas.
+    '''
 
-    for path in paths:
+    if side == 'left':
 
-        img = crop_image(img,top,bottom)
-        images.aapend(img)
+        left_slice = img[:,0:cut_size,:]
+        main_slice = img[:,cut_size:,:]
+    
+        img = cv2.hconcat([main_slice, left_slice])
 
-    return images
+    if side == 'right':
+
+        width = np.shape(img)[1]
+        right_slice = img[:,width - cut_size:,:]
+        main_slice = img[:,:width - cut_size,:]
+    
+        img = cv2.hconcat([right_slice, main_slice])
+
+    return img
+
 
 
 def add_image_to_canvas(canvas,img,x_offset,y_offset):
@@ -108,7 +156,7 @@ def annotate_image(img,text,x,y):
 
 def make_gif(frames, file_path):
 
-    with imageio.get_writer(file_path , mode="I") as writer:
+    with imageio.get_writer(file_path , mode="I", fps = 2) as writer:
 
         for frame in frames:
 

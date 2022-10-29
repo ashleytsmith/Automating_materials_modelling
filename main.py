@@ -56,16 +56,16 @@ from searching_algorithms.connectivity_search_example.combine_renders import com
 
 #run connectivity search
 
-center_atom = connectivity_search_params.center_atom
-neighbour_info = run_connectivtiy_search(center_atom, skip = False)
+#center_atom = connectivity_search_params.center_atom
+#neighbour_info = run_connectivtiy_search(center_atom, skip = False)
 
 # plot connectivity results
 
 
 #plot_connectivity(neighbour_info, atoms)
-#run_rendering(0,10,'250','1.600000')
-#run_rendering(1,10,'310','1.290323')
-#run_rendering(2,10,'500','0.800000')
+#run_rendering(0,10,'500','1.600000')
+#run_rendering(1,10,'615','1.300813')
+#run_rendering(2,10,'1000','0.800000')
 
 combine_renders() 
 

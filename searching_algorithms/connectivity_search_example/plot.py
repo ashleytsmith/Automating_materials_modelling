@@ -135,7 +135,7 @@ def generate_render_files(atoms, file_path, view, preview = False):
 
     # prepare povray kwargs
 
-    width = 400 # option to set width in pixels
+    width = 800 # option to set width in pixels
     texture = ['glass',] * number_of_atoms
     cell_line_thickness = 0.25
     background_color = 'White'

@@ -8,8 +8,9 @@ def run(view, largest_frame, height, ratio):
     Render a movie.
     '''
 
-    paths = get_filepaths( '*view_' + str(view) + '.pov')
-    base_pov_file = 'Rendering/' + 'view_' + str(view) + '/frame_' + str(largest_frame) + '_view_' + str(view) + '.pov'
+    main_folder = 'Rendering/'
+    paths = get_filepaths( main_folder + 'view_' + str(view), '*view_' + str(view) + '.pov')
+    base_pov_file = main_folder + 'view_' + str(view) + '/frame_' + str(largest_frame) + '_view_' + str(view) + '.pov'
 
     head, all_atom_positions, num_lines_in_largest_file = read_base_pov_file(base_pov_file)
 
@@ -40,9 +41,7 @@ def run(view, largest_frame, height, ratio):
         os.system('cp -r ' + forwards_frame_path + ' ' + backwards_frame_path)
 
 
-def get_filepaths(pattern):
-
-    target_directory = os.getcwd() + '/Rendering'
+def get_filepaths(target_directory, pattern):
 
     paths = []
     

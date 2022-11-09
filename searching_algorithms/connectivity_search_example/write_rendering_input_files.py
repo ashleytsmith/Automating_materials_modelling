@@ -11,7 +11,7 @@ from ase.io import write
 from ase.utils import hsv
 
 
-def plot(neighbour_info, atoms):
+def write_rendering_input_files(neighbour_info, atoms):
 
     connectivity_search_movie(neighbour_info, atoms)
 

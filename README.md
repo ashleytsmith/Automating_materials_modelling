@@ -7,9 +7,10 @@ This repo contains some examples of searching algorithms for materials simulatio
 ## Requirements
 
 * atomic simulation environment
-* numpy
+* NumPy
+* POV-Ray
 
-This project is built with atomic simulation environment which is a GUI built on Tkinter which supports preprocessing input for a broad variety of different simulation methods. There is a good guide on how to do this in the ase documentation. If you prefer using anaconda like me it is possible to install ase via anaconda which also has great documentation.
+This project utilises atomic simulation environment (ase) which is a GUI built on Tkinter which supports preprocessing input for a broad variety of different simulation methods. There is a good guide on how to do this in the ase documentation. If you prefer using anaconda like me it is possible to install ase via anaconda which also has great documentation.
 
 conda install -c conda-forge ase
 
@@ -45,9 +46,9 @@ conda install -c conda-forge ase
 
 ## Connectivity search with ray tracing visualisation
 
-*	First the neighbour searching algorithm was applied to the zeolite crystal SSZ-13 which CHA framework type.
-*	Bin sizes of above 4 angstroms and atom counts per bin of between 1 and 8 tended to perform best for this system.
-*	The result is a bond dictionary which, in this application, can be thought of as tree structure, where atoms are the vertices and bonds are the edges. The oxygen bridges in the bond dictionary were skipped and used as the input for a breadth-first-search (BFS) searching algorithm.
+*	First the neighbour searching algorithm was applied to the zeolite crystal SSZ-13 which has CHA framework type.
+*	Bin sizes of around 4 angstroms and atom counts per bin of between 1 and 8 tended to perform best for this system.
+*	The result is a bond dictionary which, in this application, can be thought of as tree structure where the atoms the vertices and the bonds are the edges. The oxygen bridges in the bond dictionary were skipped and used as the input for a breadth-first-search (BFS) searching algorithm.
 *	The BFS identifies the shells an atom belongs to relative to the starting atom and is visualized below for a 2 by 2 by 2 supercell. 
 *	The movie was made using POV-Ray with the choice of camera perspectives and use of light making it much easier to view the pores and cavities of the structure.
 
@@ -56,11 +57,11 @@ conda install -c conda-forge ase
 </p>
 
 
-## Applications and extension ideas: ##
+## Applications and extension ideas ##
 
 * The neighbour search should work for any periodic system regardless of cell shape and could easily be adapted to work for non-periodic systems. Simply trying different systems and input parameters would be a quick way to get your hands dirty with the code. A good way to extend the work would be to use the neighbour searching algorithm in more applications. The ase.neighborlist docs could be a good source of inspiration and has examples of applications involving, coordination counting, pair distribution functions, pair potentials and dynamical matrices.
 
-* A nice and potentially short extension to the breadth first search algorithm would be to extend it to do topological searches. [One way of doing this](https://www.sciencedirect.com/science/article/abs/pii/S1387181105003756) is via a series of breath first searches and utilising cyclicality conditions.
+* A nice and potentially short extension to the breadth first search algorithm would be to extend it to do topological searches. [One way of doing this](https://www.sciencedirect.com/science/article/abs/pii/S1387181105003756) is via a series of BFSs and utilising cyclicality conditions.
 
 * Lastly, another interesting direction would be build your own GUI for viewing chemical structures and exporting them to POV-Ray.  A skeleton all the features you may want is present in other open source GUIs, so a good start would be to try and reproduce these key features. Then one could take it further by really focusing on making it easy to make ray traced pictures and movies perhaps using POV-Ray commands directly which already provide an intuitive way to visualise the scene. 
 

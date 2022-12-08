@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import datetime
 
 from searching_algorithms import geometry
 
@@ -80,7 +81,7 @@ def create_atom_info_array(positions, scaled_positions, symbols, indices):
 def slice_along_axis(axis, atoms_info, number_of_bins):
    
     '''
-    Seperates the input positions into different bins.
+    Seperates the inputs into different bins based on their positions.
     '''
 
     bins = [[] for stuff in range(number_of_bins)]
@@ -140,153 +141,86 @@ def add_neighbouring_bins(bins, bins_shape, a, b, c):
     '''
 
     original_array_size = bins_shape
+    bins = np.asarray(bins,dtype='object')
+    
+    # pad with shifting
 
-    inner_layer_lower = 1
-    outer_layer_lower = 0
+    # x padding
+   
+    x_bottom_slice = apply_shift(bins[0, :, :], a)
+    x_bottom_slice = x_bottom_slice[np.newaxis,:,:]
 
-    inner_layer_higher_x = original_array_size[0]
-    inner_layer_higher_y = original_array_size[1]
-    inner_layer_higher_z = original_array_size[2]
+    x_top_slice = apply_shift(bins[-1, :, :], -a)
+    x_top_slice = x_top_slice[np.newaxis,:,:]
 
-    outer_layer_higher_x = original_array_size[0] + 1
-    outer_layer_higher_y = original_array_size[1] + 1
-    outer_layer_higher_z = original_array_size[2] + 1
+    x_padded = np.concatenate([x_top_slice, bins, x_bottom_slice], axis = 0)
 
-    bins = pad_array(bins, inner_layer_higher_x,
-                     inner_layer_higher_y, inner_layer_higher_z)
+    # y padding
 
-    # faces
+    y_bottom_slice = apply_shift(x_padded[:, 0, :], b)
+    y_bottom_slice = y_bottom_slice[:,np.newaxis,:]
 
-    # x reflections
-    for j, k in np.ndindex((inner_layer_higher_x, inner_layer_higher_z)):
+    
+    y_top_slice = apply_shift(x_padded[:, 0, :], -b)
+    y_top_slice = y_top_slice[:,np.newaxis,:]
 
-        bins[outer_layer_higher_x][j+1][k +
-                                        1] = apply_shift(copy.deepcopy(bins[inner_layer_lower][j+1][k+1]), a)
-        bins[outer_layer_lower][j+1][k +
-                                     1] = apply_shift(copy.deepcopy(bins[inner_layer_higher_x][j+1][k+1]), -a)
+    x_y_padded = np.concatenate([y_top_slice, x_padded, y_bottom_slice], axis = 1)
 
-    # y reflections
-    for i, k in np.ndindex((inner_layer_higher_x, inner_layer_higher_z)):
+    # z padding
 
-        bins[i+1][outer_layer_higher_y][k +
-                                        1] = apply_shift(copy.deepcopy(bins[i+1][inner_layer_lower][k+1]), b)
-        bins[i+1][outer_layer_lower][k +
-                                     1] = apply_shift(copy.deepcopy(bins[i+1][inner_layer_higher_y][k+1]), -b)
+    z_bottom_slice = apply_shift(x_y_padded[:, :, 0], c)
+    z_bottom_slice = z_bottom_slice[:,:,np.newaxis]
 
-    # z reflections
-    for i, j in np.ndindex((inner_layer_higher_x, inner_layer_higher_y)):
+    z_top_slice = apply_shift(x_y_padded[:, :, -1], -c)
+    z_top_slice = z_top_slice[:,:,np.newaxis]
 
-        bins[i+1][j+1][outer_layer_higher_z] = apply_shift(
-            copy.deepcopy(bins[i+1][j+1][inner_layer_lower]), c)
-        bins[i+1][j+1][outer_layer_lower] = apply_shift(
-            copy.deepcopy(bins[i+1][j+1][inner_layer_higher_z]), -c)
-
-    # edges
-
-    # x edges
-    for i in range(0, inner_layer_higher_x):
-
-        bins[i][outer_layer_higher_y][outer_layer_higher_z] = apply_shift(
-            copy.deepcopy(bins[i][inner_layer_lower][inner_layer_lower]), b + c)
-        bins[i][outer_layer_lower][outer_layer_higher_z] = apply_shift(
-            copy.deepcopy(bins[i][inner_layer_higher_y][inner_layer_lower]), -b + c)
-        bins[i][outer_layer_higher_y][outer_layer_lower] = apply_shift(
-            copy.deepcopy(bins[i][inner_layer_lower][inner_layer_higher_z]), b - c)
-        bins[i][outer_layer_lower][outer_layer_lower] = apply_shift(
-            copy.deepcopy(bins[i][inner_layer_higher_y][inner_layer_higher_z]), -b - c)
-
-    # y edges
-    for j in range(0, inner_layer_higher_y):
-
-        bins[outer_layer_higher_x][j][outer_layer_higher_z] = apply_shift(
-            copy.deepcopy(bins[inner_layer_lower][j][inner_layer_lower]), a + c)
-        bins[outer_layer_lower][j][outer_layer_higher_z] = apply_shift(
-            copy.deepcopy(bins[inner_layer_higher_x][j][inner_layer_lower]), -a + c)
-        bins[outer_layer_higher_x][j][outer_layer_lower] = apply_shift(
-            copy.deepcopy(bins[inner_layer_lower][j][inner_layer_higher_z]), a - c)
-        bins[outer_layer_lower][j][outer_layer_lower] = apply_shift(
-            copy.deepcopy(bins[inner_layer_higher_x][j][inner_layer_higher_z]), -a - c)
-
-    # z edges
-    for k in range(0, inner_layer_higher_z):
-
-        bins[outer_layer_higher_x][outer_layer_higher_y][k] = apply_shift(
-            copy.deepcopy(bins[inner_layer_lower][inner_layer_lower][k]), a + b)
-        bins[outer_layer_lower][outer_layer_higher_y][k] = apply_shift(
-            copy.deepcopy(bins[inner_layer_higher_x][inner_layer_lower][k]), -a + b)
-        bins[outer_layer_higher_x][outer_layer_lower][k] = apply_shift(
-            copy.deepcopy(bins[inner_layer_lower][inner_layer_higher_y][k]), a - b)
-        bins[outer_layer_lower][outer_layer_lower][k] = apply_shift(
-            copy.deepcopy(bins[inner_layer_higher_x][inner_layer_higher_y][k]), -a - b)
-
-    # corners
-
-    bins[outer_layer_higher_x][outer_layer_higher_y][outer_layer_higher_z] = apply_shift(
-        copy.deepcopy(bins[inner_layer_lower][inner_layer_lower][inner_layer_lower]), a + b + c)
-    bins[outer_layer_lower][outer_layer_higher_y][outer_layer_higher_z] = apply_shift(
-        copy.deepcopy(bins[inner_layer_higher_x][inner_layer_lower][inner_layer_lower]), -a + b + c)
-    bins[outer_layer_higher_x][outer_layer_lower][outer_layer_higher_z] = apply_shift(
-        copy.deepcopy(bins[inner_layer_lower][inner_layer_higher_y][inner_layer_lower]), a - b + c)
-    bins[outer_layer_higher_x][outer_layer_higher_y][outer_layer_lower] = apply_shift(
-        copy.deepcopy(bins[inner_layer_lower][inner_layer_lower][inner_layer_higher_z]), a + b - c)
-    bins[outer_layer_lower][outer_layer_lower][outer_layer_higher_z] = apply_shift(
-        copy.deepcopy(bins[inner_layer_higher_x][inner_layer_higher_y][inner_layer_lower]), -a - b + c)
-    bins[outer_layer_lower][outer_layer_higher_y][outer_layer_lower] = apply_shift(
-        copy.deepcopy(bins[inner_layer_higher_x][inner_layer_lower][inner_layer_higher_z]), -a + b - c)
-    bins[outer_layer_higher_x][outer_layer_lower][outer_layer_lower] = apply_shift(
-        copy.deepcopy(bins[inner_layer_lower][inner_layer_higher_y][inner_layer_higher_z]), a - b - c)
-    bins[outer_layer_lower][outer_layer_lower][outer_layer_lower] = apply_shift(copy.deepcopy(
-        bins[inner_layer_higher_x][inner_layer_higher_y][inner_layer_higher_z]), -a - b - c)
-
+    bins = np.concatenate([z_top_slice, x_y_padded, z_bottom_slice], axis = 2)
+    
     bins_shape = (
         original_array_size[0] + 2, original_array_size[0] + 2, original_array_size[0] + 2)
 
     return bins, bins_shape
 
 
-def pad_array(bins, x_max, y_max, z_max):
+
+def apply_shift(bins_to_copy, shift):
+
+    '''
+    Shift all menbers of each bin by the shift vector.
+    '''
+
+    shape = np.shape(bins_to_copy)
+    bins = np.empty(shape, dtype='object')
+    data_types = np.dtype([('x', 'f'), ('y', 'f'), ('z', 'f'), ('i', 'i'), ('s', 'U10')])
+
+    x_shift = shift[0]
+    y_shift = shift[1]
+    z_shift = shift[2]
+
+    for i,j in np.ndindex(shape):
+
+        bin_contents_to_copy = bins_to_copy[i][j]
     
-    '''
-    Pad the bins array with None values.
-    '''
+        if bin_contents_to_copy:
 
-    # pad z values
+            array_length = len(bin_contents_to_copy)
+            bins[i][j] = []
 
-    for i, j in np.ndindex((x_max, y_max)):
+            for k in range(0,array_length):
 
-        bins[i][j].insert(0, None)
-        bins[i][j].insert(z_max + 1, None)
+                atom_info = np.empty(1, dtype = data_types)
+                atom_info['x'] = bin_contents_to_copy[k]['x'] + x_shift
+                atom_info['y'] = bin_contents_to_copy[k]['y'] + y_shift
+                atom_info['z'] = bin_contents_to_copy[k]['z'] + z_shift
+                atom_info['i'] = bin_contents_to_copy[k]['i']
+                atom_info['s'] = bin_contents_to_copy[k]['s']
+                bins[i][j].append(atom_info[0])
 
-    # pad y values
+        else:
 
-    pad = [None for stuff in range(0, y_max+2)]
-
-    for i in range(0, x_max):
-
-        bins[i].insert(0, copy.deepcopy(pad))
-        bins[i].insert(y_max + 1, copy.deepcopy(pad))
-
-    pad = [copy.deepcopy((pad)) for stuff in range(0, x_max+2)]
-
-    # pad x values
-
-    bins.insert(0, copy.deepcopy(pad))
-    bins.insert(x_max + 1, copy.deepcopy(pad))
+            bins[i][j] = None
 
     return bins
-
-
-def apply_shift(bin_contents, shift):
-
-    if bin_contents:
-
-        for stuff in bin_contents:
-
-            stuff['x'] += shift[0]
-            stuff['y'] += shift[1]
-            stuff['z'] += shift[2]
-
-    return bin_contents
 
 
 def vectorise_bin_data(bins, shape):

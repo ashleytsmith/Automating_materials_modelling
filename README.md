@@ -33,13 +33,17 @@ conda install -c conda-forge ase
 
 * NumPy was used wherever appropriate to try to speed up the computations. The idea in numPy is to use vectorisation, broadcasting and fast indexing routines written in pure C instead of Python for-loops and iterators. We want to cram as much of the logic/computation into operations on a numPy arrays with much larger chunks of memory being visited at a time compared to slow one at a time python iterators. 
 
-* However, in this project there are many instances where we can’t really benefit from NumPy’s vectorised operations either because we are pushed to access the elements individually e.g. when finding all the nearest neighbours of a bin, or we wish to use objects. When accessing individual elements of an array it is well known that NumPy tends to be slower than Python. We are asking Python to access elements in the NumPy array stored in C memory scope one by one and then allocating a new Python object in memory and perhaps creating a pointer to this object in a list, this overhead is more expensive than just using vanilla Python where we can just access a list or a list of lists directly.
+* However, in this project there are many instances where we can’t really benefit from NumPy’s vectorised operations e.g., we are pushed to access the elements individually when finding all the nearest neighbours of a bin. When accessing individual elements of an array it is well known that NumPy tends to be slower than Python. We are asking Python to access elements in the NumPy array stored in C memory scope one by one and then allocating a new Python object in memory and perhaps creating a pointer to this object in a list, this overhead is more expensive than just using vanilla Python where we can just access a list or a list of lists directly.
 
 **Code summary:**
 
 <p align="center">
 <img src="https://github.com/ashleytsmith/Useful_algorithms_for_materials_modelling/blob/main/Images_for_GitHub/neighbour_search_algo_overview.png" width="400" alt="see images folder if image doesn't show"> 
 </p>
+
+**Performance:**
+
+Needs work. This was the first attempt to get a clean, easy to follow and working solution to a surprisingly tricky searching problem. Currently it works well for 100s of atoms but does not scale well for larger system sizes and should not be expected to after just one iteration. It is a good starting template and there is plenty of low hanging fruit (see the "Applications and extension ideas" section for some suggestions) which could yield speed boosts. 
 
 
 ## Connectivity search with ray tracing visualisation
@@ -57,9 +61,10 @@ conda install -c conda-forge ase
 
 ## Applications and extension ideas ##
 
-* The neighbour search should work for any periodic system regardless of cell shape and could easily be adapted to work for non-periodic systems. Simply trying different systems and input parameters would be a quick way to get your hands dirty with the code. A good way to extend the work would be to use the neighbour searching algorithm in more applications. The ase.neighborlist docs could be a good source of inspiration and has examples of applications involving, coordination counting, pair distribution functions, pair potentials and dynamical matrices.
+* The neighbour search algorithm is a pet project which will likely require a fair amount of work to get it to scale well. To improve the scaling the most pressing things to focus on, in order, would be: Improving the memory layout e.g., by just considering the positions alone and only allowing float data types instead of putting all information in one bin. Implementing a much better indexing routine for the neighbour pairs, likely flattening it out before looping through in the distance calc. And lastly, incorporating the periodic boundary condition routine into the distance calculation rather than using explicit padding.
 
-* A nice and potentially short extension to the breadth first search algorithm would be to extend it to do topological searches. [One way of doing this](https://www.sciencedirect.com/science/article/abs/pii/S1387181105003756) is via a series of BFSs and utilising cyclicality conditions.
+
+* A nice and potentially short extension to the breadth first search algorithm would be to extend it to do topological searches. [One way](https://www.sciencedirect.com/science/article/abs/pii/S1387181105003756) of doing this is via a series of BFSs and utilising cyclicality conditions.
 
 * Lastly, another interesting direction would be build your own GUI for viewing chemical structures and exporting them to POV-Ray.  A skeleton all the features you may want is present in other open source GUIs, so a good start would be to try and reproduce these key features. Then one could take it further by really focusing on making it easy to make ray traced pictures and movies perhaps using POV-Ray commands directly which already provide an intuitive way to visualise the scene. 
 
